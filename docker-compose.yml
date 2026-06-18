@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ui_api_tests
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: pytest -v
+
+  ui-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ui_tests
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: pytest tests/ui/ -m ui -v
+
+  api-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_tests
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: pytest tests/api/ -m api -v
+
+  allure:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: allure_report
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+    ports:
+      - "5050:5050"
+    command: >
+      bash -c "
+        pytest --alluredir=reports/allure-results &&
+        allure generate reports/allure-results -o reports/allure-report --clean &&
+        allure open reports/allure-report -h 0.0.0.0 -p 5050
+      "
+
+  allure-generate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: allure_generate
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+    command: >
+      bash -c "
+        pytest --alluredir=reports/allure-results &&
+        allure generate reports/allure-results -o reports/allure-report --clean
+      "

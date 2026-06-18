@@ -24,16 +24,19 @@ env:
   VALID_PASSWORD: "SuperSecretPassword!"
 
 jobs:
+  # ============================================
+  # JOB 1: Linting
+  # ============================================
   lint:
-    name: Lint with Ruff
+    name: 🔍 Lint with Ruff
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -49,17 +52,20 @@ jobs:
       - name: Run Ruff format check
         run: ruff format --check .
 
+  # ============================================
+  # JOB 2: UI Tests (локально)
+  # ============================================
   ui-tests:
-    name: UI Tests
+    name: 🎨 UI Tests
     runs-on: ubuntu-latest
     needs: lint
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -84,24 +90,27 @@ jobs:
       
       - name: Upload UI test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-results-ui
           path: allure-results/ui/
           retention-days: 7
           if-no-files-found: warn
 
+  # ============================================
+  # JOB 3: API Tests (локально)
+  # ============================================
   api-tests:
-    name: API Tests
+    name: 🔌 API Tests
     runs-on: ubuntu-latest
     needs: lint
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -120,17 +129,69 @@ jobs:
 
       - name: Upload API test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-results-api
           path: allure-results/api/
           retention-days: 7
           if-no-files-found: warn
 
-  allure-report:
-    name: Allure Report
+  # ============================================
+  # JOB 4: Docker Tests (НОВЫЙ)
+  # ============================================
+  docker-tests:
+    name: 🐳 Docker Tests
     runs-on: ubuntu-latest
-    needs: [ui-tests, api-tests]
+    needs: lint  # ← Запускается после успешного lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t ui-api-tests:latest .
+
+      - name: Create .env file for Docker
+        run: |
+          cat > .env <<EOF
+          BASE_URL=${{ env.BASE_URL }}
+          API_BASE_URL=${{ env.API_BASE_URL }}
+          VALID_USERNAME=${{ env.VALID_USERNAME }}
+          VALID_PASSWORD=${{ env.VALID_PASSWORD }}
+          HEADLESS=true
+          EOF
+
+      - name: Run all tests in Docker
+        run: |
+          docker run --rm \
+            --env-file .env \
+            -v ${{ github.workspace }}/allure-results-docker:/app/reports/allure-results \
+            ui-api-tests:latest \
+            pytest \
+              --alluredir=reports/allure-results/docker \
+              -n auto \
+              --reruns 2 \
+              --reruns-delay 1
+
+      - name: Upload Docker test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: allure-results-docker
+          path: allure-results-docker/docker/
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ============================================
+  # JOB 5: Allure Report
+  # ============================================
+  allure-report:
+    name: 📊 Allure Report
+    runs-on: ubuntu-latest
+    needs: [ui-tests, api-tests, docker-tests]  # ← Добавили docker-tests
     if: always()
     
     environment:
@@ -139,11 +200,11 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download UI results
         if: always()
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         continue-on-error: true
         with:
           name: allure-results-ui
@@ -151,14 +212,22 @@ jobs:
 
       - name: Download API results
         if: always()
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         continue-on-error: true
         with:
           name: allure-results-api
           path: allure-results/api/
 
+      - name: Download Docker results
+        if: always()
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: allure-results-docker
+          path: allure-results/docker/
+
       - name: Get Allure history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         if: always()
         continue-on-error: true
         with:
@@ -175,7 +244,7 @@ jobs:
 
       - name: Upload Allure Report artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: allure-report
           path: allure-history/
@@ -184,22 +253,22 @@ jobs:
 
       - name: Setup Pages
         if: github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: allure-history/
 
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Comment PR with Allure link
         if: github.event_name == 'pull_request' && always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const runId = context.runId;
@@ -210,40 +279,43 @@ jobs:
               issue_number: context.issue.number,
               owner: repo.owner,
               repo: repo.repo,
-              body: `## 📊 Allure Report\n\n[Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
+              body: `## 📊 Allure Report\n\n📦 [Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
             });
 
+  # ============================================
+  # JOB 6: Summary
+  # ============================================
   summary:
-    name: Summary
+    name: ✅ Summary
     runs-on: ubuntu-latest
-    needs: [lint, ui-tests, api-tests, allure-report]
+    needs: [lint, ui-tests, api-tests, docker-tests, allure-report]  # ← Добавили docker-tests
     if: always()
     
     steps:
       - name: Check results
         run: |
-          echo "## Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔌 API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐳 Docker Tests: ${{ needs.docker-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           # Проверяем ВСЕ критичные jobs
-          # "success" — единственный acceptable статус для прохождения
           if [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.ui-tests.result }}" != "success" ] || \
-             [ "${{ needs.api-tests.result }}" != "success" ]; then
-            echo "**Pipeline failed!**" >> $GITHUB_STEP_SUMMARY
+             [ "${{ needs.api-tests.result }}" != "success" ] || \
+             [ "${{ needs.docker-tests.result }}" != "success" ]; then
+            echo "❌ **Pipeline failed!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Причины:**" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.lint.result }}" != "success" ] && echo "- Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.ui-tests.result }}" != "success" ] && echo "- UI Tests: \`${{ needs.ui-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.api-tests.result }}" != "success" ] && echo "- API Tests: \`${{ needs.api-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Проверьте логи в соответствующих jobs." >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.lint.result }}" != "success" ] && echo "- 🔍 Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.ui-tests.result }}" != "success" ] && echo "- 🎨 UI Tests: \`${{ needs.ui-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.api-tests.result }}" != "success" ] && echo "- 🔌 API Tests: \`${{ needs.api-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.docker-tests.result }}" != "success" ] && echo "- 🐳 Docker Tests: \`${{ needs.docker-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "**All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All tests passed!**" >> $GITHUB_STEP_SUMMARY
           fi
