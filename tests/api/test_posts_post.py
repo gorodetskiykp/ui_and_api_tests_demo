@@ -82,8 +82,12 @@ class TestCreatePost:
             created = PostResponse(**response.json())
             created_posts.append(created)
 
-        ids = [p.id for p in created_posts]
-        assert len(ids) == len(set(ids)), "Все ID должны быть уникальными"
+        assert len(created_posts) == len(multiple_posts_data)
+        assert all(p.title for p in created_posts)
+        assert all(p.body for p in created_posts)
+
+        # jsonplaceholder всегда возвращает id=101 для POST,
+        # поэтому проверку уникальности ID опускаем.
 
     @allure.title("Создать пост с пустым заголовком")
     @allure.severity(allure.severity_level.CRITICAL)
