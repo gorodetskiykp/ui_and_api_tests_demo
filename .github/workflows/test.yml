@@ -299,13 +299,14 @@ jobs:
             # Генерируем отчёт
             /opt/allure/allure-2.30.0/bin/allure generate allure-results -o allure-report --clean
             
-            # === ИСПРАВЛЕНИЕ БАЗОВОГО ПУТИ ===
             REPO_NAME="${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
             echo "Repository name: $REPO_NAME"
             
             if [ -f "allure-report/index.html" ]; then
-              sed -i "s|<head>|<head><base href=\"/${REPO_NAME}/\">|" allure-report/index.html
-              echo "✅ Добавлен <base href> в index.html"
+              sed -i "s|<head>|<head><base href=\"/${REPO_NAME}\">|" allure-report/index.html
+              echo "✅ Добавлен <base href> без слэша в конце"
+              
+              grep -q "<base href" allure-report/index.html && echo "✅ <base href> найден в index.html"
             fi
             
             # Копируем в allure-history
