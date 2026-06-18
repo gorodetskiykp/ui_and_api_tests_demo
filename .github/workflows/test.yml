@@ -238,7 +238,11 @@ jobs:
           curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.zip
           unzip -q allure.zip -d /opt/allure
           echo "/opt/allure/allure-2.30.0/bin" >> $GITHUB_PATH
+
+      - name: Verify Allure installation
+        run: |
           allure --version
+          which allure
 
       # === ГЕНЕРАЦИЯ ОТЧЁТА ===
       - name: Get Allure history
@@ -262,7 +266,6 @@ jobs:
         run: |
           if [ -d "allure-results" ] && [ "$(ls -A allure-results 2>/dev/null)" ]; then
             allure generate allure-results -o allure-report --clean
-            # Копируем history для следующего запуска
             cp -r allure-report/history allure-history/ 2>/dev/null || true
             cp -r allure-report/* allure-history/ 2>/dev/null || true
           else
