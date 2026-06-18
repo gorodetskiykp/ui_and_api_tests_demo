@@ -2,6 +2,9 @@
 
 Автоматизированные тесты на Python с использованием **Playwright** (UI) и **httpx + Pydantic** (API).
 
+[![Test Pipeline](https://github.com/gorodetskiykp/ui_and_api_tests_demo/actions/workflows/test.yml/badge.svg)](https://github.com/gorodetskiykp/ui_and_api_tests_demo/actions/workflows/test.yml)
+[![Allure Report](https://img.shields.io/badge/Allure-Report-blue)](https://gorodetskiykp.github.io/ui_and_api_tests_demo/)
+
 ##  Реализовано по ТЗ
 
 | Требование | Статус |
