@@ -354,13 +354,15 @@ ui_and_api_tests_demo/
 
 ## API тесты
 
-**API**: https://reqres.in/api
+**API**: https://jsonplaceholder.typicode.com
 
 **Покрытие**:
-- `GET /users` — получение списка пользователей
-- `GET /users/{id}` — получение пользователя по ID
-- `POST /users` — создание пользователя
-- `PUT /users/{id}` — обновление пользователя
+- `GET /posts` — получение списка постов
+- `GET /posts/{id}` — получение поста по ID
+- `GET /posts/{id}/comments` — получение комментариев к посту
+- `POST /posts` — создание поста
+- `PUT /posts/{id}` — обновление поста
+- `DELETE /posts/{id}` — удаление поста
 - Негативные сценарии: пустые данные, невалидный JSON, несуществующие ресурсы
 
 **Паттерн**: API Client + Pydantic валидация ответов
@@ -395,4 +397,4 @@ ui_and_api_tests_demo/
 ## Тестируемые ресурсы
 
 - **UI**: https://the-internet.herokuapp.com/login
-- **API**: https://reqres.in/api
+- **API**: https://jsonplaceholder.typicode.com

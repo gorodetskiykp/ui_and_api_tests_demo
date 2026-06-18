@@ -1,9 +1,9 @@
 from pathlib import Path
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+
     # UI
     base_url: str = "https://the-internet.herokuapp.com"
     headless: bool = True
@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     timeout: int = 30_000  # ms
 
     # API
-    api_base_url: str = "https://reqres.in/api"
+    api_base_url: str = "https://jsonplaceholder.typicode.com" 
     api_timeout: float = 30.0
 
-    # Credentials (for herokuapp)
+    # Credentials (для herokuapp)
     valid_username: str = "tomsmith"
     valid_password: str = "SuperSecretPassword!"
 

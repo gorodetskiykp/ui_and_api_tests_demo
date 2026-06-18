@@ -1,34 +1,34 @@
 import pytest
 from faker import Faker
 
-from tests.api.clients.users_client import UsersClient
+from tests.api.clients.posts_client import PostsClient
 
 fake = Faker()
 
 
 @pytest.fixture(scope="session")
-def users_client() -> UsersClient:
-    client = UsersClient()
+def posts_client() -> PostsClient:
+    client = PostsClient()
     yield client
     client.close()
 
 
 @pytest.fixture
-def sample_user_data() -> dict:
+def sample_post_data() -> dict:
     return {
-        "name": fake.name(),
-        "job": fake.job(),
+        "title": fake.sentence(nb_words=6),
+        "body": fake.paragraph(nb_sentences=3),
+        "user_id": fake.random_int(min=1, max=10),
     }
 
 
 @pytest.fixture
-def random_user_data() -> dict:
-    return {
-        "name": fake.first_name(),
-        "job": fake.job(),
-    }
-
-
-@pytest.fixture
-def multiple_users_data():
-    return [{"name": fake.name(), "job": fake.job()} for _ in range(5)]
+def multiple_posts_data():
+    return [
+        {
+            "title": fake.sentence(nb_words=6),
+            "body": fake.paragraph(nb_sentences=3),
+            "user_id": fake.random_int(min=1, max=10),
+        }
+        for _ in range(5)
+    ]
