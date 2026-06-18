@@ -89,6 +89,7 @@ jobs:
           name: allure-results-ui
           path: allure-results/ui/
           retention-days: 7
+          if-no-files-found: warn
 
   api-tests:
     name: API Tests
@@ -124,6 +125,7 @@ jobs:
           name: allure-results-api
           path: allure-results/api/
           retention-days: 7
+          if-no-files-found: warn
 
   allure-report:
     name: Allure Report
@@ -140,32 +142,45 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download UI results
+        if: always()
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: allure-results-ui
           path: allure-results/ui/
 
       - name: Download API results
+        if: always()
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: allure-results-api
           path: allure-results/api/
 
-      - name: Setup Allure
-        uses: sbi10/allure-install-action@v1
+      - name: Get Allure history
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
         with:
-          allure-version: 2.29.0
+          ref: gh-pages
+          path: gh-pages
 
       - name: Generate Allure Report
-        run: allure generate allure-results -o allure-report --clean
+        uses: simple-elf/allure-report-action@v1.9
+        if: always()
+        with:
+          allure_results: allure-results
+          allure_history: allure-history
+          keep_reports: 20
 
       - name: Upload Allure Report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
-          path: allure-report/
+          path: allure-history/
           retention-days: 30
+          if-no-files-found: warn
 
       - name: Setup Pages
         if: github.ref == 'refs/heads/main'
@@ -175,7 +190,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: allure-report/
+          path: allure-history/
 
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
@@ -195,7 +210,7 @@ jobs:
               issue_number: context.issue.number,
               owner: repo.owner,
               repo: repo.repo,
-              body: `## Allure Report\n\n[Скачать отчёт из артефактов](${artifactUrl})\n\nОтчёт доступен в разделе **Artifacts** (нужно быть авторизованным на GitHub).\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
+              body: `## 📊 Allure Report\n\n📦 [Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
             });
 
   summary:
@@ -207,17 +222,17 @@ jobs:
     steps:
       - name: Check results
         run: |
-          echo "## Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔌 API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.ui-tests.result }}" == "failure" ] || [ "${{ needs.api-tests.result }}" == "failure" ]; then
-            echo "**Tests failed!** Check artifacts for details." >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Tests failed!** Check artifacts for details." >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "**All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All tests passed!**" >> $GITHUB_STEP_SUMMARY
           fi
