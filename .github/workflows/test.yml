@@ -238,7 +238,7 @@ jobs:
             echo "**Pipeline failed!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Причины:**" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.lint.result }}" != "success" ] && echo "- 🔍 Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.lint.result }}" != "success" ] && echo "- Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
             [ "${{ needs.ui-tests.result }}" != "success" ] && echo "- UI Tests: \`${{ needs.ui-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
             [ "${{ needs.api-tests.result }}" != "success" ] && echo "- API Tests: \`${{ needs.api-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY

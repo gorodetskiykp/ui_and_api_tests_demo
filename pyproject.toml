@@ -40,5 +40,9 @@ known-first-party = ["config", "tests", "utils"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-    "S101",   # Use of assert detected 
+    "S101",   # Use of assert detected
+    "RUF001", # cyrillic in test dada
+    "RUF002", # cyrillic in docstrings
+    "RUF003", # cyrillyc in comments 
+    "TC002", # type-annotations imports
 ]
