@@ -294,20 +294,26 @@ jobs:
         if: always()
         run: |
           if [ -d "allure-results" ] && [ "$(find allure-results -name '*.json' 2>/dev/null | wc -l)" -gt 0 ]; then
-            echo "Найдено JSON файлов: $(find allure-results -name '*.json' | wc -l)"
-            
-            # Генерируем отчёт
             /opt/allure/allure-2.30.0/bin/allure generate allure-results -o allure-report --clean
             
-            # === УНИВЕРСАЛЬНОЕ РЕШЕНИЕ: относительный путь ===
-            # Работает и на GitHub Pages, и при локальном открытии
             if [ -f "allure-report/index.html" ]; then
+              # Добавляем <base href>
               sed -i 's|<head>|<head><base href="./">|' allure-report/index.html
-              echo "✅ Добавлен <base href=\"./\"> в index.html"
-              grep -o "<base href[^>]*>" allure-report/index.html
+              
+              # Добавляем мета-теги кэширования
+              sed -i 's|<meta charset="utf-8">|<meta charset="utf-8">\n    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n    <meta http-equiv="Pragma" content="no-cache">\n    <meta http-equiv="Expires" content="0">|' allure-report/index.html
+              
+              echo "✅ Добавлены <base href> и мета-теги кэширования"
             fi
             
-            # Копируем в allure-history
+            # Добавляем файл _headers
+            cat > allure-report/_headers <<EOF
+          /*
+            Cache-Control: no-cache, no-store, must-revalidate
+            Pragma: no-cache
+            Expires: 0
+          EOF
+            
             mkdir -p allure-history
             cp -r allure-report/* allure-history/ 2>/dev/null || true
           else
@@ -354,6 +360,27 @@ jobs:
         uses: actions/upload-pages-artifact@v4
         with:
           path: allure-history/
+
+      - name: Add cache headers
+        run: |
+          cat > allure-history/_headers <<EOF
+          /*
+            Cache-Control: no-cache, no-store, must-revalidate
+            Pragma: no-cache
+            Expires: 0
+          EOF
+          echo "✅ Добавлен файл _headers"
+
+      - name: Clear GitHub Pages cache
+        run: |
+          echo "Очистка кэша GitHub Pages..."
+          # Создаём пустой коммит для триггера обновления
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          echo "$(date)" > .cache-buster
+          git add .cache-buster
+          git commit -m "Clear cache" || true
+          git push || true
 
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
