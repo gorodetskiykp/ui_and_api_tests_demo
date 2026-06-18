@@ -238,10 +238,10 @@ jobs:
         if: always()
         run: |
           echo "=== Структура allure-results ==="
-          find allure-results -type f | head -50
+          find allure-results -type f 2>/dev/null | head -50
           echo ""
           echo "=== Количество JSON файлов ==="
-          find allure-results -name '*.json' | wc -l
+          find allure-results -name '*.json' 2>/dev/null | wc -l
 
       # === УСТАНОВКА ALLURE ===
       - name: Setup Java
@@ -260,10 +260,20 @@ jobs:
         run: /opt/allure/allure-2.30.0/bin/allure --version
 
       # === ИСТОРИЯ (безопасная) ===
+      - name: Check if gh-pages branch exists
+        id: check-branch
+        run: |
+          if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Ветка gh-pages существует"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Ветка gh-pages не существует (первый запуск)"
+          fi
+
       - name: Get Allure history
+        if: steps.check-branch.outputs.exists == 'true'
         uses: actions/checkout@v5
-        if: always()
-        continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
@@ -276,7 +286,7 @@ jobs:
             cp -r gh-pages/history allure-history/ || true
             echo "✅ История скопирована"
           else
-            echo "ℹ️ История отсутствует (первый запуск)"
+            echo "ℹ️ История отсутствует (будет создана после первого деплоя)"
           fi
 
       # === ГЕНЕРАЦИЯ ОТЧЁТА ===
@@ -296,8 +306,6 @@ jobs:
             if [ -f "allure-report/index.html" ]; then
               sed -i "s|<head>|<head><base href=\"/${REPO_NAME}/\">|" allure-report/index.html
               echo "✅ Добавлен <base href> в index.html"
-              echo "Первые строки index.html:"
-              head -5 allure-report/index.html
             fi
             
             # Копируем в allure-history
@@ -315,9 +323,6 @@ jobs:
         run: |
           echo "=== Содержимое allure-history ==="
           ls -la allure-history/
-          echo ""
-          echo "=== Размер index.html ==="
-          wc -c allure-history/index.html 2>/dev/null || echo "index.html не найден"
           echo ""
           echo "=== Первые строки index.html ==="
           head -5 allure-history/index.html 2>/dev/null || echo "не найден"
@@ -361,7 +366,7 @@ jobs:
               owner: repo.owner,
               repo: repo.repo,
               body: `## 📊 Allure Report\n\n📦 [Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
-            });
+            });  
 
   # ============================================
   # JOB 6: Summary
