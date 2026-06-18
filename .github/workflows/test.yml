@@ -299,14 +299,12 @@ jobs:
             # Генерируем отчёт
             /opt/allure/allure-2.30.0/bin/allure generate allure-results -o allure-report --clean
             
-            REPO_NAME="${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
-            echo "Repository name: $REPO_NAME"
-            
+            # === УНИВЕРСАЛЬНОЕ РЕШЕНИЕ: относительный путь ===
+            # Работает и на GitHub Pages, и при локальном открытии
             if [ -f "allure-report/index.html" ]; then
-              sed -i "s|<head>|<head><base href=\"/${REPO_NAME}\">|" allure-report/index.html
-              echo "✅ Добавлен <base href> без слэша в конце"
-              
-              grep -q "<base href" allure-report/index.html && echo "✅ <base href> найден в index.html"
+              sed -i 's|<head>|<head><base href="./">|' allure-report/index.html
+              echo "✅ Добавлен <base href=\"./\"> в index.html"
+              grep -o "<base href[^>]*>" allure-report/index.html
             fi
             
             # Копируем в allure-history
