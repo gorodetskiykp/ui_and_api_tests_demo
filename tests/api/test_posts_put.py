@@ -3,7 +3,7 @@ from http import HTTPStatus
 import allure
 import pytest
 
-from tests.api.schemas.post_schema import PostUpdate, PostResponse
+from tests.api.schemas.post_schema import PostResponse, PostUpdate
 
 
 @allure.epic("API Tests")
@@ -11,7 +11,6 @@ from tests.api.schemas.post_schema import PostUpdate, PostResponse
 @allure.story("PUT /posts/{id}")
 @pytest.mark.api
 class TestUpdatePost:
-
     @allure.title("Обновить существующий пост")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke
@@ -45,9 +44,7 @@ class TestUpdatePost:
         ],
         ids=["post_1", "post_2", "post_3"],
     )
-    def test_update_different_posts(
-        self, posts_client, post_id: int, title: str, body: str, user_id: int
-    ):
+    def test_update_different_posts(self, posts_client, post_id: int, title: str, body: str, user_id: int):
         updated_data = PostUpdate(title=title, body=body, user_id=user_id)
         response = posts_client.update_post(post_id, updated_data)
 

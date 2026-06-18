@@ -4,7 +4,7 @@ import allure
 import pytest
 from pydantic import ValidationError
 
-from tests.api.schemas.post_schema import PostListItem, Comment
+from tests.api.schemas.post_schema import Comment, PostListItem
 
 
 @allure.epic("API Tests")
@@ -12,7 +12,6 @@ from tests.api.schemas.post_schema import PostListItem, Comment
 @allure.story("GET /posts")
 @pytest.mark.api
 class TestGetPosts:
-
     @allure.title("Получить список постов")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke

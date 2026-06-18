@@ -8,7 +8,6 @@ from tests.api.schemas.post_schema import PostCreate, PostUpdate
 
 
 class PostsClient(BaseAPIClient):
-
     def __init__(self, base_url: str = "https://jsonplaceholder.typicode.com", timeout: float = 30.0):
         super().__init__(base_url, timeout)
 

@@ -14,7 +14,6 @@ fake = Faker()
 @allure.story("POST /posts")
 @pytest.mark.api
 class TestCreatePost:
-
     @allure.title("Создать пост с валидными данными")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke
@@ -59,9 +58,7 @@ class TestCreatePost:
             pytest.param(fake.sentence(), fake.paragraph(), 4, id="faker_generated"),
         ],
     )
-    def test_create_post_various_data(
-        self, posts_client, title: str, body: str, user_id: int
-    ):
+    def test_create_post_various_data(self, posts_client, title: str, body: str, user_id: int):
         post = PostCreate(title=title, body=body, user_id=user_id)
         response = posts_client.create_post(post)
 
@@ -92,11 +89,13 @@ class TestCreatePost:
     @allure.severity(allure.severity_level.CRITICAL)
     @pytest.mark.regression
     def test_create_post_empty_title(self, posts_client):
-        response = posts_client.create_post_raw({
-            "title": "",
-            "body": "Some body",
-            "userId": 1,
-        })
+        response = posts_client.create_post_raw(
+            {
+                "title": "",
+                "body": "Some body",
+                "userId": 1,
+            }
+        )
 
         assert response.status_code in [HTTPStatus.CREATED, HTTPStatus.BAD_REQUEST]
 
