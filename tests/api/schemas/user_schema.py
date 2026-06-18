@@ -1,4 +1,3 @@
-from typing import Optional
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -15,9 +14,9 @@ class UserUpdate(UserCreate):
 class UserResponse(BaseModel):
     name: str
     job: str
-    id: Optional[str] = None
-    createdAt: Optional[str] = None
-    updatedAt: Optional[str] = None
+    id: str | None = None
+    createdAt: str | None = None
+    updatedAt: str | None = None
 
 
 class UserData(BaseModel):

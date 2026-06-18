@@ -1,5 +1,5 @@
 import allure
-from playwright.sync_api import Page, Locator, expect
+from playwright.sync_api import Locator, Page, expect
 
 from tests.ui.pages.base_page import BasePage
 

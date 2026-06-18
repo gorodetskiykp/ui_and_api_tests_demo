@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 from loguru import logger
@@ -22,7 +22,7 @@ class UsersClient(BaseAPIClient):
         logger.info(f"Создание пользователя: {user_data.name}")
         return self.post("/users", json_data=user_data.model_dump())
 
-    def create_user_raw(self, data: Dict[str, Any]) -> httpx.Response:
+    def create_user_raw(self, data: dict[str, Any]) -> httpx.Response:
         logger.info(f"Создание пользователя с сырыми данными: {data}")
         return self.post("/users", json_data=data)
 
@@ -30,7 +30,7 @@ class UsersClient(BaseAPIClient):
         logger.info(f"Обновление пользователя {user_id}: {user_data.name}")
         return self.put(f"/users/{user_id}", json_data=user_data.model_dump())
 
-    def update_user_raw(self, user_id: int, data: Dict[str, Any]) -> httpx.Response:
+    def update_user_raw(self, user_id: int, data: dict[str, Any]) -> httpx.Response:
         logger.info(f"Обновление пользователя {user_id} с сырыми данными: {data}")
         return self.put(f"/users/{user_id}", json_data=data)
 

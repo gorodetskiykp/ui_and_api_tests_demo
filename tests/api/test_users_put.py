@@ -3,7 +3,7 @@ from http import HTTPStatus
 import allure
 import pytest
 
-from tests.api.schemas.user_schema import UserUpdate, UserResponse
+from tests.api.schemas.user_schema import UserResponse, UserUpdate
 
 
 @allure.epic("API Tests")
@@ -18,11 +18,11 @@ class TestUpdateUser:
     def test_update_user_success(self, users_client):
         user_id = 2
         updated_data = UserUpdate(name="Updated Name", job="Senior QA")
-        
+
         response = users_client.update_user(user_id, updated_data)
 
         assert response.status_code == HTTPStatus.OK
-        
+
         updated = UserResponse(**response.json())
         assert updated.name == updated_data.name
         assert updated.job == updated_data.job
@@ -33,7 +33,7 @@ class TestUpdateUser:
     @pytest.mark.regression
     def test_update_user_empty_data(self, users_client):
         response = users_client.update_user_raw(2, {"name": "", "job": ""})
-        
+
         assert response.status_code in [HTTPStatus.OK, HTTPStatus.BAD_REQUEST]
 
     @allure.title("Обновить несуществующего пользователя")
@@ -42,7 +42,7 @@ class TestUpdateUser:
     def test_update_nonexistent_user(self, users_client):
         updated_data = UserUpdate(name="Test", job="Test")
         response = users_client.update_user(99999, updated_data)
-        
+
         assert response.status_code in [HTTPStatus.OK, HTTPStatus.NOT_FOUND]
 
     @allure.title("Обновить пользователя с валидными данными (параметризация)")

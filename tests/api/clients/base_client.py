@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import allure
 import httpx
@@ -24,7 +24,7 @@ class BaseAPIClient:
     def get(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         **kwargs,
     ) -> httpx.Response:
         logger.info(f"GET {self.base_url}{endpoint}")
@@ -36,7 +36,7 @@ class BaseAPIClient:
     def post(
         self,
         endpoint: str,
-        json_data: Optional[Dict[str, Any]] = None,
+        json_data: dict[str, Any] | None = None,
         **kwargs,
     ) -> httpx.Response:
         logger.info(f"POST {self.base_url}{endpoint}")
@@ -49,7 +49,7 @@ class BaseAPIClient:
     def put(
         self,
         endpoint: str,
-        json_data: Optional[Dict[str, Any]] = None,
+        json_data: dict[str, Any] | None = None,
         **kwargs,
     ) -> httpx.Response:
         logger.info(f"PUT {self.base_url}{endpoint}")

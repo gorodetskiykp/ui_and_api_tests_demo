@@ -23,7 +23,7 @@ class TestCreateUser:
         response = users_client.create_user(user)
 
         assert response.status_code == HTTPStatus.CREATED
-        
+
         created = UserResponse(**response.json())
         assert created.name == user.name
         assert created.job == user.job
@@ -36,7 +36,7 @@ class TestCreateUser:
     def test_create_user_russian_locale(self, users_client):
         fake_ru = Faker("ru_RU")
         user = UserCreate(name=fake_ru.name(), job=fake_ru.job())
-        
+
         response = users_client.create_user(user)
 
         assert response.status_code == HTTPStatus.CREATED
@@ -70,15 +70,15 @@ class TestCreateUser:
     @pytest.mark.regression
     def test_create_multiple_users(self, users_client, multiple_users_data):
         created_users = []
-        
+
         for user_data in multiple_users_data:
             user = UserCreate(**user_data)
             response = users_client.create_user(user)
-            
+
             assert response.status_code == HTTPStatus.CREATED
             created = UserResponse(**response.json())
             created_users.append(created)
-        
+
         ids = [u.id for u in created_users]
         assert len(ids) == len(set(ids)), "Все ID должны быть уникальными"
 

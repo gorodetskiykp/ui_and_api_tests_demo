@@ -4,7 +4,7 @@ import allure
 import pytest
 from pydantic import ValidationError
 
-from tests.api.schemas.user_schema import UserListResponse, SingleUserResponse
+from tests.api.schemas.user_schema import SingleUserResponse, UserListResponse
 
 
 @allure.epic("API Tests")
@@ -20,7 +20,7 @@ class TestGetUsers:
         response = users_client.get_users(page=1)
 
         assert response.status_code == HTTPStatus.OK
-        
+
         try:
             data = UserListResponse(**response.json())
             assert data.page == 1
@@ -39,7 +39,7 @@ class TestGetUsers:
         response = users_client.get_user_by_id(user_id)
 
         assert response.status_code == HTTPStatus.OK
-        
+
         try:
             data = SingleUserResponse(**response.json())
             assert data.data.id == user_id

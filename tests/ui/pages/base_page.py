@@ -1,8 +1,7 @@
-from typing import Optional
 
 import allure
-from playwright.sync_api import Page, Locator
 from loguru import logger
+from playwright.sync_api import Locator, Page
 
 
 class BasePage:
@@ -21,11 +20,11 @@ class BasePage:
         from config.settings import settings
         return settings.base_url
 
-    def wait_for_element(self, locator: Locator, timeout: Optional[int] = None) -> None:
+    def wait_for_element(self, locator: Locator, timeout: int | None = None) -> None:
         timeout = timeout or self._default_timeout
         locator.wait_for(state="visible", timeout=timeout)
 
-    def wait_for_url(self, url_pattern: str, timeout: Optional[int] = None) -> None:
+    def wait_for_url(self, url_pattern: str, timeout: int | None = None) -> None:
         self.page.wait_for_url(url_pattern, timeout=timeout or self._default_timeout)
 
     @property

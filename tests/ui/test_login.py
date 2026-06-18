@@ -75,28 +75,28 @@ class TestLogin:
         ("username", "password", "expected_error"),
         [
             pytest.param(
-                " tomsmith", "SuperSecretPassword!", 
-                "Your username is invalid!", 
+                " tomsmith", "SuperSecretPassword!",
+                "Your username is invalid!",
                 id="leading_space_in_username"
             ),
             pytest.param(
-                "tomsmith ", "SuperSecretPassword!", 
-                "Your username is invalid!", 
+                "tomsmith ", "SuperSecretPassword!",
+                "Your username is invalid!",
                 id="trailing_space_in_username"
             ),
             pytest.param(
-                " tomsmith ", "SuperSecretPassword!", 
-                "Your username is invalid!", 
+                " tomsmith ", "SuperSecretPassword!",
+                "Your username is invalid!",
                 id="both_spaces_in_username"
             ),
             pytest.param(
-                "tomsmith", " SuperSecretPassword!", 
-                "Your password is invalid!", 
+                "tomsmith", " SuperSecretPassword!",
+                "Your password is invalid!",
                 id="leading_space_in_password"
             ),
             pytest.param(
-                "tomsmith", "SuperSecretPassword! ", 
-                "Your password is invalid!", 
+                "tomsmith", "SuperSecretPassword! ",
+                "Your password is invalid!",
                 id="trailing_space_in_password"
             ),
         ],
@@ -120,23 +120,23 @@ class TestLogin:
         ("username", "password", "expected_error"),
         [
             pytest.param(
-                "TomSmith", "SuperSecretPassword!", 
-                "Your username is invalid!", 
+                "TomSmith", "SuperSecretPassword!",
+                "Your username is invalid!",
                 id="username_title_case"
             ),
             pytest.param(
-                "TOMSMITH", "SuperSecretPassword!", 
-                "Your username is invalid!", 
+                "TOMSMITH", "SuperSecretPassword!",
+                "Your username is invalid!",
                 id="username_uppercase"
             ),
             pytest.param(
-                "tomsmith", "supersecretpassword!", 
-                "Your password is invalid!", 
+                "tomsmith", "supersecretpassword!",
+                "Your password is invalid!",
                 id="password_lowercase"
             ),
             pytest.param(
-                "tomsmith", "SUPERSECRETPASSWORD!", 
-                "Your password is invalid!", 
+                "tomsmith", "SUPERSECRETPASSWORD!",
+                "Your password is invalid!",
                 id="password_uppercase"
             ),
         ],
