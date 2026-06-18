@@ -82,7 +82,7 @@ cp .env.example .env
 Содержимое `.env`:
 ```env
 BASE_URL=https://the-internet.herokuapp.com
-API_BASE_URL=https://reqres.in/api
+API_BASE_URL=https://jsonplaceholder.typicode.com
 VALID_USERNAME=tomsmith
 VALID_PASSWORD=SuperSecretPassword!
 HEADLESS=true
@@ -290,7 +290,7 @@ Docker автоматически загружает `.env` файл из кор
 
 ```env
 BASE_URL=https://the-internet.herokuapp.com
-API_BASE_URL=https://reqres.in/api
+API_BASE_URL=https://jsonplaceholder.typicode.com
 VALID_USERNAME=tomsmith
 VALID_PASSWORD=SuperSecretPassword!
 HEADLESS=true
