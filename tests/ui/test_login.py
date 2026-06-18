@@ -9,7 +9,6 @@ from tests.ui.pages.login_page import LoginPage
 @allure.story("Страница логина the-internet.herokuapp.com")
 @pytest.mark.ui
 class TestLogin:
-
     @allure.title("Успешный вход с валидными credentials")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke
@@ -67,7 +66,6 @@ class TestLogin:
         assert login_page.is_visible(login_page.password_input)
         assert login_page.is_visible(login_page.login_btn)
 
-
     @allure.title("Логин с пробелами в начале/конце")
     @allure.severity(allure.severity_level.NORMAL)
     @pytest.mark.regression
@@ -75,29 +73,19 @@ class TestLogin:
         ("username", "password", "expected_error"),
         [
             pytest.param(
-                " tomsmith", "SuperSecretPassword!",
-                "Your username is invalid!",
-                id="leading_space_in_username"
+                " tomsmith", "SuperSecretPassword!", "Your username is invalid!", id="leading_space_in_username"
             ),
             pytest.param(
-                "tomsmith ", "SuperSecretPassword!",
-                "Your username is invalid!",
-                id="trailing_space_in_username"
+                "tomsmith ", "SuperSecretPassword!", "Your username is invalid!", id="trailing_space_in_username"
             ),
             pytest.param(
-                " tomsmith ", "SuperSecretPassword!",
-                "Your username is invalid!",
-                id="both_spaces_in_username"
+                " tomsmith ", "SuperSecretPassword!", "Your username is invalid!", id="both_spaces_in_username"
             ),
             pytest.param(
-                "tomsmith", " SuperSecretPassword!",
-                "Your password is invalid!",
-                id="leading_space_in_password"
+                "tomsmith", " SuperSecretPassword!", "Your password is invalid!", id="leading_space_in_password"
             ),
             pytest.param(
-                "tomsmith", "SuperSecretPassword! ",
-                "Your password is invalid!",
-                id="trailing_space_in_password"
+                "tomsmith", "SuperSecretPassword! ", "Your password is invalid!", id="trailing_space_in_password"
             ),
         ],
     )
@@ -112,33 +100,16 @@ class TestLogin:
         login_page.login(username, password)
         login_page.expect_error_message(expected_error)
 
-
     @allure.title("Логин с неверным регистром")
     @allure.severity(allure.severity_level.NORMAL)
     @pytest.mark.regression
     @pytest.mark.parametrize(
         ("username", "password", "expected_error"),
         [
-            pytest.param(
-                "TomSmith", "SuperSecretPassword!",
-                "Your username is invalid!",
-                id="username_title_case"
-            ),
-            pytest.param(
-                "TOMSMITH", "SuperSecretPassword!",
-                "Your username is invalid!",
-                id="username_uppercase"
-            ),
-            pytest.param(
-                "tomsmith", "supersecretpassword!",
-                "Your password is invalid!",
-                id="password_lowercase"
-            ),
-            pytest.param(
-                "tomsmith", "SUPERSECRETPASSWORD!",
-                "Your password is invalid!",
-                id="password_uppercase"
-            ),
+            pytest.param("TomSmith", "SuperSecretPassword!", "Your username is invalid!", id="username_title_case"),
+            pytest.param("TOMSMITH", "SuperSecretPassword!", "Your username is invalid!", id="username_uppercase"),
+            pytest.param("tomsmith", "supersecretpassword!", "Your password is invalid!", id="password_lowercase"),
+            pytest.param("tomsmith", "SUPERSECRETPASSWORD!", "Your password is invalid!", id="password_uppercase"),
         ],
     )
     def test_login_with_wrong_case(

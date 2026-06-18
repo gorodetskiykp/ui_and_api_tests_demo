@@ -5,7 +5,6 @@ from tests.ui.pages.base_page import BasePage
 
 
 class LoginPage(BasePage):
-
     URL = "/login"
     USERNAME_FIELD: str = "#username"
     PASSWORD_FIELD: str = "#password"
@@ -20,7 +19,6 @@ class LoginPage(BasePage):
         self.login_btn: Locator = page.locator(self.LOGIN_BUTTON)
         self.flash: Locator = page.locator(self.FLASH_MESSAGE)
         self.secure_heading: Locator = page.locator(self.SECURE_AREA_HEADING)
-
 
     @allure.step("Открыть страницу логина")
     def open_login_page(self) -> "LoginPage":

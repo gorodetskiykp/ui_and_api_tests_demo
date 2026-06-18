@@ -8,7 +8,6 @@ from tests.api.schemas.user_schema import UserCreate, UserUpdate
 
 
 class UsersClient(BaseAPIClient):
-
     def __init__(self, base_url: str = "https://reqres.in/api", timeout: float = 30.0):
         super().__init__(base_url, timeout)
 

@@ -31,7 +31,4 @@ def random_user_data() -> dict:
 
 @pytest.fixture
 def multiple_users_data():
-    return [
-        {"name": fake.name(), "job": fake.job()}
-        for _ in range(5)
-    ]
+    return [{"name": fake.name(), "job": fake.job()} for _ in range(5)]

@@ -30,6 +30,7 @@ def _attach_screenshot_on_failure(page: Page, request):
     if request.node.rep_call and request.node.rep_call.failed:
         screenshot = page.screenshot(full_page=True)
         import allure
+
         allure.attach(
             screenshot,
             name=f"failure_{request.node.name}",

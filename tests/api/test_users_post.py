@@ -14,7 +14,6 @@ fake = Faker()
 @allure.story("POST /users")
 @pytest.mark.api
 class TestCreateUser:
-
     @allure.title("Создать пользователя с валидными данными")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke
@@ -101,8 +100,6 @@ class TestCreateUser:
     @pytest.mark.regression
     def test_create_user_invalid_json(self, users_client):
         response = users_client.post(
-            "/users",
-            content=b'{"name": "John", "job":}',
-            headers={"Content-Type": "application/json"}
+            "/users", content=b'{"name": "John", "job":}', headers={"Content-Type": "application/json"}
         )
         assert response.status_code == HTTPStatus.BAD_REQUEST

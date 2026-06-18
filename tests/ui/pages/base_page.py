@@ -1,11 +1,9 @@
-
 import allure
 from loguru import logger
 from playwright.sync_api import Locator, Page
 
 
 class BasePage:
-
     def __init__(self, page: Page):
         self.page = page
 
@@ -18,6 +16,7 @@ class BasePage:
     @property
     def base_url(self) -> str:
         from config.settings import settings
+
         return settings.base_url
 
     def wait_for_element(self, locator: Locator, timeout: int | None = None) -> None:
@@ -30,6 +29,7 @@ class BasePage:
     @property
     def _default_timeout(self) -> int:
         from config.settings import settings
+
         return settings.timeout
 
     @allure.step("Клик по элементу")

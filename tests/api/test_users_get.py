@@ -12,7 +12,6 @@ from tests.api.schemas.user_schema import SingleUserResponse, UserListResponse
 @allure.story("GET /users")
 @pytest.mark.api
 class TestGetUsers:
-
     @allure.title("Получить список пользователей (страница 1)")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke

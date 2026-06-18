@@ -11,7 +11,6 @@ from tests.api.schemas.user_schema import UserResponse, UserUpdate
 @allure.story("PUT /users/{id}")
 @pytest.mark.api
 class TestUpdateUser:
-
     @allure.title("Обновить существующего пользователя")
     @allure.severity(allure.severity_level.BLOCKER)
     @pytest.mark.smoke
@@ -57,9 +56,7 @@ class TestUpdateUser:
         ],
         ids=["user_1", "user_2", "user_3"],
     )
-    def test_update_different_users(
-        self, users_client, user_id: int, name: str, job: str
-    ):
+    def test_update_different_users(self, users_client, user_id: int, name: str, job: str):
         updated_data = UserUpdate(name=name, job=job)
         response = users_client.update_user(user_id, updated_data)
 

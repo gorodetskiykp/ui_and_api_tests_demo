@@ -6,7 +6,6 @@ from loguru import logger
 
 
 class BaseAPIClient:
-
     def __init__(self, base_url: str, timeout: float = 30.0):
         self.base_url = base_url
         self.timeout = timeout
