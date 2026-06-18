@@ -188,7 +188,7 @@ jobs:
   # ============================================
   # JOB 5: Allure Report
   # ============================================
-    allure-report:
+  allure-report:
     name: Allure Report
     runs-on: ubuntu-latest
     needs: [ui-tests, api-tests, docker-tests]
