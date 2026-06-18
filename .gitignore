@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Allure
+reports/allure-results/
+reports/allure-report/
+reports/allure-history/

@@ -1,0 +1,223 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.10"
+  BASE_URL: "https://the-internet.herokuapp.com"
+  API_BASE_URL: "https://reqres.in/api"
+  VALID_USERNAME: "tomsmith"
+  VALID_PASSWORD: "SuperSecretPassword!"
+
+jobs:
+  lint:
+    name: Lint with Ruff
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Run Ruff check
+        run: ruff check . --output-format=github
+
+      - name: Run Ruff format check
+        run: ruff format --check .
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: |
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run UI tests
+        run: |
+          pytest tests/ui/ -m ui \
+            --alluredir=allure-results/ui \
+            -n auto \
+            --reruns 2 \
+            --reruns-delay 1
+      
+      - name: Upload UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-ui
+          path: allure-results/ui/
+          retention-days: 7
+
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run API tests
+        run: |
+          pytest tests/api/ -m api \
+            --alluredir=allure-results/api \
+            -n auto \
+            --reruns 2
+
+      - name: Upload API test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-api
+          path: allure-results/api/
+          retention-days: 7
+
+  allure-report:
+    name: Allure Report
+    runs-on: ubuntu-latest
+    needs: [ui-tests, api-tests]
+    if: always()
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download UI results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-ui
+          path: allure-results/ui/
+
+      - name: Download API results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-api
+          path: allure-results/api/
+
+      - name: Setup Allure
+        uses: sbi10/allure-install-action@v1
+        with:
+          allure-version: 2.29.0
+
+      - name: Generate Allure Report
+        run: allure generate allure-results -o allure-report --clean
+
+      - name: Upload Allure Report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
+
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report/
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Comment PR with Allure link
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = context.runId;
+            const repo = context.repo;
+            const artifactUrl = `https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: repo.owner,
+              repo: repo.repo,
+              body: `## Allure Report\n\n[Скачать отчёт из артефактов](${artifactUrl})\n\nОтчёт доступен в разделе **Artifacts** (нужно быть авторизованным на GitHub).\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
+            });
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [lint, ui-tests, api-tests, allure-report]
+    if: always()
+    
+    steps:
+      - name: Check results
+        run: |
+          echo "## Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.ui-tests.result }}" == "failure" ] || [ "${{ needs.api-tests.result }}" == "failure" ]; then
+            echo "**Tests failed!** Check artifacts for details." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "**All tests passed!**" >> $GITHUB_STEP_SUMMARY
+          fi
