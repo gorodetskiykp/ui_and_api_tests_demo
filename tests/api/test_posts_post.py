@@ -104,7 +104,7 @@ class TestCreatePost:
     @pytest.mark.regression
     def test_create_post_no_body(self, posts_client):
         response = posts_client.post("/posts", json_data=None)
-        
+
         # jsonplaceholder может вернуть:
         # - 201 (создаст пустой пост)
         # - 400 (если валидирует тело)
@@ -127,7 +127,7 @@ class TestCreatePost:
         # jsonplaceholder возвращает 500 при невалидном JSON
         # В production API это был бы 400 Bad Request
         assert response.status_code in [
-            HTTPStatus.BAD_REQUEST,           # 400 — корректное поведение
-            HTTPStatus.INTERNAL_SERVER_ERROR, # 500 — поведение jsonplaceholder
+            HTTPStatus.BAD_REQUEST,  # 400 — корректное поведение
+            HTTPStatus.INTERNAL_SERVER_ERROR,  # 500 — поведение jsonplaceholder
             HTTPStatus.UNPROCESSABLE_ENTITY,  # 422 — альтернативный вариант
         ]
