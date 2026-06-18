@@ -24,13 +24,9 @@ env:
   VALID_PASSWORD: "SuperSecretPassword!"
 
 jobs:
-  # ============================================
-  # JOB 1: Linting
-  # ============================================
   lint:
-    name: 🔍 Lint with Ruff
+    name: Lint with Ruff
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -52,14 +48,10 @@ jobs:
       - name: Run Ruff format check
         run: ruff format --check .
 
-  # ============================================
-  # JOB 2: UI Tests (локально)
-  # ============================================
   ui-tests:
-    name: 🎨 UI Tests
+    name: UI Tests
     runs-on: ubuntu-latest
     needs: lint
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -75,7 +67,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # === КЭШИРОВАНИЕ PLAYWRIGHT ===
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
@@ -94,7 +85,7 @@ jobs:
             -n auto \
             --reruns 2 \
             --reruns-delay 1
-      
+
       - name: Upload UI test results
         if: always()
         uses: actions/upload-artifact@v5
@@ -104,14 +95,10 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-  # ============================================
-  # JOB 3: API Tests (локально)
-  # ============================================
   api-tests:
-    name: 🔌 API Tests
+    name: API Tests
     runs-on: ubuntu-latest
     needs: lint
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -143,14 +130,10 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-  # ============================================
-  # JOB 4: Docker Tests (НОВЫЙ)
-  # ============================================
   docker-tests:
-    name: 🐳 Docker Tests
+    name: Docker Tests
     runs-on: ubuntu-latest
-    needs: lint  # ← Запускается после успешного lint
-    
+    needs: lint
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -192,19 +175,14 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-  # ============================================
-  # JOB 5: Allure Report
-  # ============================================
   allure-report:
     name: Allure Report
     runs-on: ubuntu-latest
     needs: [ui-tests, api-tests, docker-tests]
     if: always()
-    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -233,7 +211,6 @@ jobs:
           name: allure-results-docker
           path: allure-results/docker/
 
-      # === ДИАГНОСТИКА ===
       - name: Debug - List all files
         if: always()
         run: |
@@ -243,7 +220,6 @@ jobs:
           echo "=== Количество JSON файлов ==="
           find allure-results -name '*.json' 2>/dev/null | wc -l
 
-      # === УСТАНОВКА ALLURE ===
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -259,16 +235,15 @@ jobs:
       - name: Verify Allure
         run: /opt/allure/allure-2.30.0/bin/allure --version
 
-      # === ИСТОРИЯ (безопасная) ===
       - name: Check if gh-pages branch exists
         id: check-branch
         run: |
           if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Ветка gh-pages существует"
+            echo "Ветка gh-pages существует"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ Ветка gh-pages не существует (первый запуск)"
+            echo "Ветка gh-pages не существует (первый запуск)"
           fi
 
       - name: Get Allure history
@@ -284,36 +259,23 @@ jobs:
           mkdir -p allure-history
           if [ -d "gh-pages/history" ]; then
             cp -r gh-pages/history allure-history/ || true
-            echo "✅ История скопирована"
+            echo "История скопирована"
           else
-            echo "ℹ️ История отсутствует (будет создана после первого деплоя)"
+            echo "История отсутствует (будет создана после первого деплоя)"
           fi
 
-      # === ГЕНЕРАЦИЯ ОТЧЁТА ===
       - name: Generate Allure Report
         if: always()
         run: |
           if [ -d "allure-results" ] && [ "$(find allure-results -name '*.json' 2>/dev/null | wc -l)" -gt 0 ]; then
             /opt/allure/allure-2.30.0/bin/allure generate allure-results -o allure-report --clean
-            
+
             if [ -f "allure-report/index.html" ]; then
-              # Добавляем <base href>
               sed -i 's|<head>|<head><base href="./">|' allure-report/index.html
-              
-              # Добавляем мета-теги кэширования
               sed -i 's|<meta charset="utf-8">|<meta charset="utf-8">\n    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n    <meta http-equiv="Pragma" content="no-cache">\n    <meta http-equiv="Expires" content="0">|' allure-report/index.html
-              
-              echo "✅ Добавлены <base href> и мета-теги кэширования"
+              echo "Добавлены <base href> и мета-теги кэширования"
             fi
-            
-            # Добавляем файл _headers
-            cat > allure-report/_headers <<EOF
-          /*
-            Cache-Control: no-cache, no-store, must-revalidate
-            Pragma: no-cache
-            Expires: 0
-          EOF
-            
+
             mkdir -p allure-history
             cp -r allure-report/* allure-history/ 2>/dev/null || true
           else
@@ -322,7 +284,17 @@ jobs:
             echo "<html><body><h1>No test results</h1></body></html>" > allure-history/index.html
           fi
 
-      # === ДИАГНОСТИКА РЕЗУЛЬТАТА ===
+      - name: Add cache headers
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cat > allure-history/_headers <<'EOF'
+          /*
+            Cache-Control: no-cache, no-store, must-revalidate
+            Pragma: no-cache
+            Expires: 0
+          EOF
+          echo "Добавлен файл _headers"
+
       - name: Debug - Check generated report
         if: always()
         run: |
@@ -330,18 +302,17 @@ jobs:
           ls -la allure-history/
           echo ""
           echo "=== Проверка ключевых файлов ==="
-          test -f allure-history/index.html && echo "✅ index.html существует"
-          test -f allure-history/app.js && echo "✅ app.js существует"
-          test -f allure-history/styles.css && echo "✅ styles.css существует"
-          test -d allure-history/data && echo "✅ data/ существует"
+          test -f allure-history/index.html && echo "index.html существует"
+          test -f allure-history/app.js && echo "app.js существует"
+          test -f allure-history/styles.css && echo "styles.css существует"
+          test -d allure-history/data && echo "data/ существует"
           echo ""
           echo "=== Первые строки index.html ==="
           head -5 allure-history/index.html 2>/dev/null || echo "не найден"
           echo ""
           echo "=== Проверка <base href> ==="
-          grep -o "<base href[^>]*>" allure-history/index.html 2>/dev/null || echo "⚠️ <base href> не найден"
+          grep -o "<base href[^>]*>" allure-history/index.html 2>/dev/null || echo "<base href> не найден"
 
-      # === АРТЕФАКТ И ДЕПЛОЙ ===
       - name: Upload Allure Report artifact
         if: always()
         uses: actions/upload-artifact@v5
@@ -361,27 +332,6 @@ jobs:
         with:
           path: allure-history/
 
-      - name: Add cache headers
-        run: |
-          cat > allure-history/_headers <<EOF
-          /*
-            Cache-Control: no-cache, no-store, must-revalidate
-            Pragma: no-cache
-            Expires: 0
-          EOF
-          echo "✅ Добавлен файл _headers"
-
-      - name: Clear GitHub Pages cache
-        run: |
-          echo "Очистка кэша GitHub Pages..."
-          # Создаём пустой коммит для триггера обновления
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          echo "$(date)" > .cache-buster
-          git add .cache-buster
-          git commit -m "Clear cache" || true
-          git push || true
-
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
         id: deployment
@@ -395,48 +345,43 @@ jobs:
             const runId = context.runId;
             const repo = context.repo;
             const artifactUrl = `https://github.com/${repo.owner}/${repo.repo}/actions/runs/${runId}`;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: repo.owner,
               repo: repo.repo,
-              body: `## 📊 Allure Report\n\n📦 [Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
-            });  
+              body: `## Allure Report\n\n[Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
+            });
 
-  # ============================================
-  # JOB 6: Summary
-  # ============================================
   summary:
-    name: ✅ Summary
+    name: Summary
     runs-on: ubuntu-latest
-    needs: [lint, ui-tests, api-tests, docker-tests, allure-report]  # ← Добавили docker-tests
+    needs: [lint, ui-tests, api-tests, docker-tests, allure-report]
     if: always()
-    
     steps:
       - name: Check results
         run: |
-          echo "## 🎯 Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔍 Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 🎨 UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔌 API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 🐳 Docker Tests: ${{ needs.docker-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 📊 Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Tests: ${{ needs.docker-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
-          # Проверяем ВСЕ критичные jobs
+
           if [ "${{ needs.lint.result }}" != "success" ] || \
              [ "${{ needs.ui-tests.result }}" != "success" ] || \
              [ "${{ needs.api-tests.result }}" != "success" ] || \
              [ "${{ needs.docker-tests.result }}" != "success" ]; then
-            echo "❌ **Pipeline failed!**" >> $GITHUB_STEP_SUMMARY
+            echo "**Pipeline failed!**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Причины:**" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.lint.result }}" != "success" ] && echo "- 🔍 Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.ui-tests.result }}" != "success" ] && echo "- 🎨 UI Tests: \`${{ needs.ui-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.api-tests.result }}" != "success" ] && echo "- 🔌 API Tests: \`${{ needs.api-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
-            [ "${{ needs.docker-tests.result }}" != "success" ] && echo "- 🐳 Docker Tests: \`${{ needs.docker-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.lint.result }}" != "success" ] && echo "- Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.ui-tests.result }}" != "success" ] && echo "- UI Tests: \`${{ needs.ui-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.api-tests.result }}" != "success" ] && echo "- API Tests: \`${{ needs.api-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.docker-tests.result }}" != "success" ] && echo "- Docker Tests: \`${{ needs.docker-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "✅ **All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "**All tests passed!**" >> $GITHUB_STEP_SUMMARY
           fi
