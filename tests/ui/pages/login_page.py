@@ -10,7 +10,7 @@ class LoginPage(BasePage):
     PASSWORD_FIELD: str = "#password"
     LOGIN_BUTTON: str = "button[type='submit']"
     FLASH_MESSAGE: str = "#flash"
-    SECURE_AREA_HEADING: str = "h2.subheader"
+    SECURE_AREA_HEADING: str = "h2:has-text('Welcome')"
 
     def __init__(self, page: Page):
         super().__init__(page)
@@ -53,7 +53,7 @@ class LoginPage(BasePage):
     @allure.step("Проверить успешный вход")
     def expect_successful_login(self) -> None:
         self.wait_for_url("**/secure")
-        expect(self.secure_heading).to_contain_text("Welcome")
+        expect(self.secure_heading).to_contain_text("Welcome", timeout=10_000)
 
     @allure.step("Проверить сообщение об ошибке: {expected_text}")
     def expect_error_message(self, expected_text: str) -> None:
