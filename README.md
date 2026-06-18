@@ -280,4 +280,3 @@ allure serve reports/allure-results
 
 - **UI**: https://the-internet.herokuapp.com/login
 - **API**: https://reqres.in/api
-```
