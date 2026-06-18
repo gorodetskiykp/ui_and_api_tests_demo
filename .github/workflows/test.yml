@@ -233,8 +233,18 @@ jobs:
           name: allure-results-docker
           path: allure-results/docker/
 
-      # === УСТАНОВКА ALLURE CLI ===
-      - name: Setup Java (для Allure)
+      # === ДИАГНОСТИКА ===
+      - name: Debug - List all files
+        if: always()
+        run: |
+          echo "=== Структура allure-results ==="
+          find allure-results -type f | head -50
+          echo ""
+          echo "=== Количество JSON файлов ==="
+          find allure-results -name '*.json' | wc -l
+
+      # === УСТАНОВКА ALLURE ===
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -246,12 +256,10 @@ jobs:
           unzip -q allure.zip -d /opt/allure
           echo "/opt/allure/allure-2.30.0/bin" >> $GITHUB_PATH
 
-      - name: Verify Allure installation
-        run: |
-          allure --version
-          which allure
+      - name: Verify Allure
+        run: /opt/allure/allure-2.30.0/bin/allure --version
 
-      # === ГЕНЕРАЦИЯ ОТЧЁТА ===
+      # === ИСТОРИЯ (безопасная) ===
       - name: Get Allure history
         uses: actions/checkout@v5
         if: always()
@@ -264,23 +272,57 @@ jobs:
         if: always()
         run: |
           mkdir -p allure-history
-          if [ -d "gh-pages" ] && [ -d "gh-pages/history" ]; then
+          if [ -d "gh-pages/history" ]; then
             cp -r gh-pages/history allure-history/ || true
+            echo "✅ История скопирована"
+          else
+            echo "ℹ️ История отсутствует (первый запуск)"
           fi
 
+      # === ГЕНЕРАЦИЯ ОТЧЁТА ===
       - name: Generate Allure Report
         if: always()
         run: |
-          if [ -d "allure-results" ] && [ "$(ls -A allure-results 2>/dev/null)" ]; then
-            allure generate allure-results -o allure-report --clean
-            cp -r allure-report/history allure-history/ 2>/dev/null || true
+          if [ -d "allure-results" ] && [ "$(find allure-results -name '*.json' 2>/dev/null | wc -l)" -gt 0 ]; then
+            echo "Найдено JSON файлов: $(find allure-results -name '*.json' | wc -l)"
+            
+            # Генерируем отчёт
+            /opt/allure/allure-2.30.0/bin/allure generate allure-results -o allure-report --clean
+            
+            # === ИСПРАВЛЕНИЕ БАЗОВОГО ПУТИ ===
+            REPO_NAME="${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}"
+            echo "Repository name: $REPO_NAME"
+            
+            if [ -f "allure-report/index.html" ]; then
+              sed -i "s|<head>|<head><base href=\"/${REPO_NAME}/\">|" allure-report/index.html
+              echo "✅ Добавлен <base href> в index.html"
+              echo "Первые строки index.html:"
+              head -5 allure-report/index.html
+            fi
+            
+            # Копируем в allure-history
+            mkdir -p allure-history
             cp -r allure-report/* allure-history/ 2>/dev/null || true
           else
-            echo "::warning::No allure results found, skipping report generation"
+            echo "::warning::Нет allure results"
             mkdir -p allure-history
-            echo "<html><body><h1>No test results available</h1></body></html>" > allure-history/index.html
+            echo "<html><body><h1>No test results</h1></body></html>" > allure-history/index.html
           fi
 
+      # === ДИАГНОСТИКА РЕЗУЛЬТАТА ===
+      - name: Debug - Check generated report
+        if: always()
+        run: |
+          echo "=== Содержимое allure-history ==="
+          ls -la allure-history/
+          echo ""
+          echo "=== Размер index.html ==="
+          wc -c allure-history/index.html 2>/dev/null || echo "index.html не найден"
+          echo ""
+          echo "=== Первые строки index.html ==="
+          head -5 allure-history/index.html 2>/dev/null || echo "не найден"
+
+      # === АРТЕФАКТ И ДЕПЛОЙ ===
       - name: Upload Allure Report artifact
         if: always()
         uses: actions/upload-artifact@v5
@@ -290,7 +332,6 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # === ДЕПЛОЙ НА GITHUB PAGES ===
       - name: Setup Pages
         if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v6
