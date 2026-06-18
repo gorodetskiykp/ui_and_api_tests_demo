@@ -155,20 +155,6 @@ make install && make test && make allure
 
 > **Примечание**: Для команды `make allure` требуется установленный [Allure CLI](https://docs.qameta.io/allure/#_installing_a_commandline).
 > Альтернатива: используйте `make allure-generate` и откройте `reports/allure-report/index.html` в браузере.
-```
-
----
-
-## 🔧 Установка Allure CLI (опционально)
-
-Если хотите использовать `make allure` с автоматическим открытием:
-
-### Linux (Ubuntu/Debian):
-```bash
-sudo apt-add-repository ppa:qameta/allure
-sudo apt update
-sudo apt install allure
-```
 
 ### macOS:
 ```bash
