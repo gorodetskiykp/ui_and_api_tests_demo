@@ -210,7 +210,7 @@ jobs:
               issue_number: context.issue.number,
               owner: repo.owner,
               repo: repo.repo,
-              body: `## 📊 Allure Report\n\n📦 [Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
+              body: `## 📊 Allure Report\n\n[Скачать отчёт из артефактов](${artifactUrl})\n\nПосле мержа в main отчёт будет опубликован на GitHub Pages.`
             });
 
   summary:
@@ -222,17 +222,28 @@ jobs:
     steps:
       - name: Check results
         run: |
-          echo "## 🎯 Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔍 Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 🎨 UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 🔌 API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- 📊 Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- UI Tests: ${{ needs.ui-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- API Tests: ${{ needs.api-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Allure Report: ${{ needs.allure-report.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          if [ "${{ needs.ui-tests.result }}" == "failure" ] || [ "${{ needs.api-tests.result }}" == "failure" ]; then
-            echo "❌ **Tests failed!** Check artifacts for details." >> $GITHUB_STEP_SUMMARY
+          # Проверяем ВСЕ критичные jobs
+          # "success" — единственный acceptable статус для прохождения
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.ui-tests.result }}" != "success" ] || \
+             [ "${{ needs.api-tests.result }}" != "success" ]; then
+            echo "**Pipeline failed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Причины:**" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.lint.result }}" != "success" ] && echo "- 🔍 Lint: \`${{ needs.lint.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.ui-tests.result }}" != "success" ] && echo "- UI Tests: \`${{ needs.ui-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            [ "${{ needs.api-tests.result }}" != "success" ] && echo "- API Tests: \`${{ needs.api-tests.result }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Проверьте логи в соответствующих jobs." >> $GITHUB_STEP_SUMMARY
             exit 1
           else
-            echo "✅ **All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "**All tests passed!**" >> $GITHUB_STEP_SUMMARY
           fi
