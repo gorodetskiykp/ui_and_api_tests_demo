@@ -325,8 +325,17 @@ jobs:
           echo "=== Содержимое allure-history ==="
           ls -la allure-history/
           echo ""
+          echo "=== Проверка ключевых файлов ==="
+          test -f allure-history/index.html && echo "✅ index.html существует"
+          test -f allure-history/app.js && echo "✅ app.js существует"
+          test -f allure-history/styles.css && echo "✅ styles.css существует"
+          test -d allure-history/data && echo "✅ data/ существует"
+          echo ""
           echo "=== Первые строки index.html ==="
           head -5 allure-history/index.html 2>/dev/null || echo "не найден"
+          echo ""
+          echo "=== Проверка <base href> ==="
+          grep -o "<base href[^>]*>" allure-history/index.html 2>/dev/null || echo "⚠️ <base href> не найден"
 
       # === АРТЕФАКТ И ДЕПЛОЙ ===
       - name: Upload Allure Report artifact
