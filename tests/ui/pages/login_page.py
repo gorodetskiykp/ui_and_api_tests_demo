@@ -10,7 +10,7 @@ class LoginPage(BasePage):
     PASSWORD_FIELD: str = "#password"
     LOGIN_BUTTON: str = "button[type='submit']"
     FLASH_MESSAGE: str = "#flash"
-    SECURE_AREA_HEADING: str = "h2:has-text('Welcome')"
+    SECURE_AREA_HEADING: str = "h4.subheader"
 
     def __init__(self, page: Page):
         super().__init__(page)

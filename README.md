@@ -319,13 +319,13 @@ ui_and_api_tests_demo/
 │   └── api/
 │       ├── clients/
 │       │   ├── base_client.py   # Базовый HTTP клиент
-│       │   └── users_client.py  # Клиент для /users
+│       │   └── posts_client.py  # Клиент для /posts
 │       ├── schemas/
-│       │   └── user_schema.py   # Pydantic модели
+│       │   └── post_schema.py   # Pydantic модели
 │       ├── conftest.py          # API фикстуры
-│       ├── test_users_get.py    # GET тесты
-│       ├── test_users_post.py   # POST тесты
-│       └── test_users_put.py    # PUT тесты
+│       ├── test_posts_get.py    # GET тесты
+│       ├── test_posts_post.py   # POST тесты
+│       └── test_posts_put.py    # PUT тесты
 ├── utils/
 │   └── logger.py                # Настройка loguru
 ├── .env.example
